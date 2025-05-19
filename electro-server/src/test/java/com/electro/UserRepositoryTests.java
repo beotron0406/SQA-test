@@ -23,7 +23,7 @@ public class UserRepositoryTests {
 
     @Test
     public void testGetUserByUsername() {
-        User user = userRepository.findByUsername("dnucator0").orElseThrow(null);
+        User user = userRepository.findByUsername("da").orElseThrow(null);
         Set<Role> roles = user.getRoles();
         UserDetailsImpl test = UserDetailsImpl.build(user);
     }

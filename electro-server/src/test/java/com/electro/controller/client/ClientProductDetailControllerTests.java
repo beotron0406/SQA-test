@@ -424,4 +424,321 @@ public class ClientProductDetailControllerTests {
                 anyInt(),
                 anyList());
     }
+
+    // TC-PROD-DETAIL-09: Xem sản phẩm có nhiều lựa chọn màu sắc
+    @Test
+    @DisplayName("Should return product with multiple color options")
+    void getProduct_ShouldReturnProductWithMultipleColorOptions() {
+        // Arrange
+        String slug = "iphone-14-pro";
+
+        Product productWithColors = mock(Product.class);
+        when(productWithColors.getId()).thenReturn(6L);
+        when(productWithColors.getName()).thenReturn("iPhone 14 Pro");
+        when(productWithColors.getSlug()).thenReturn(slug);
+
+        // Giả lập sản phẩm có nhiều tùy chọn màu sắc
+        // Ta sẽ kiểm tra thông qua mapper
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(productWithColors));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(6L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(6L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(5);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(15);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(productWithColors), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(productWithColors),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-10: Xem sản phẩm có nhiều kích cỡ
+    @Test
+    @DisplayName("Should return product with multiple size options")
+    void getProduct_ShouldReturnProductWithMultipleSizeOptions() {
+        // Arrange
+        String slug = "nike-air-max";
+
+        Product productWithSizes = mock(Product.class);
+        when(productWithSizes.getId()).thenReturn(7L);
+        when(productWithSizes.getName()).thenReturn("Nike Air Max");
+        when(productWithSizes.getSlug()).thenReturn(slug);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(productWithSizes));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(7L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(7L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(4);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(25);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(productWithSizes), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        // Verify repository and mapper calls
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(productWithSizes),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-11: Xem lựa chọn số lượng sản phẩm
+    @Test
+    @DisplayName("Should return product with quantity selection information")
+    void getProduct_ShouldReturnProductWithQuantitySelectionInformation() {
+        // Arrange
+        String slug = "dell-xps-13";
+
+        Product product = mock(Product.class);
+        when(product.getId()).thenReturn(8L);
+        when(product.getName()).thenReturn("Dell XPS 13");
+        when(product.getSlug()).thenReturn(slug);
+
+        // Giả lập thông tin tồn kho giới hạn số lượng
+        SimpleProductInventory inventory = mock(SimpleProductInventory.class);
+        when(inventory.getProductId()).thenReturn(8L);
+        when(inventory.getCanBeSold()).thenReturn(18);
+
+        List<SimpleProductInventory> inventories = Collections.singletonList(inventory);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(product));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(8L)))).thenReturn(inventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(8L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(5);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(12);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(product), eq(inventories), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        // Verify inventory information is passed to the mapper correctly
+        verify(productRepository).findBySlug(slug);
+        verify(projectionRepository).findSimpleProductInventories(eq(List.of(8L)));
+        verify(clientProductMapper).entityToResponse(
+                eq(product),
+                eq(inventories),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-12: Xem thông tin giao hàng của sản phẩm
+    @Test
+    @DisplayName("Should return product with delivery information")
+    void getProduct_ShouldReturnProductWithDeliveryInformation() {
+        // Arrange
+        String slug = "sony-playstation-5";
+
+        Product product = mock(Product.class);
+        when(product.getId()).thenReturn(9L);
+        when(product.getName()).thenReturn("Sony PlayStation 5");
+        when(product.getSlug()).thenReturn(slug);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(product));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(9L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(9L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(5);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(30);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(product), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(product),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-13: Xem sản phẩm có khuyến mãi/giảm giá
+    @Test
+    @DisplayName("Should return product with promotion/discount information")
+    void getProduct_ShouldReturnProductWithPromotionInformation() {
+        // Arrange
+        String slug = "samsung-tv-qled";
+
+        Product product = mock(Product.class);
+        when(product.getId()).thenReturn(10L);
+        when(product.getSlug()).thenReturn(slug);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(product));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(10L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(10L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(4);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(18);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(product), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(product),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-14: Xem chính sách đổi trả của sản phẩm
+    @Test
+    @DisplayName("Should return product with return policy information")
+    void getProduct_ShouldReturnProductWithReturnPolicyInformation() {
+        // Arrange
+        String slug = "airpods-pro";
+
+        Product product = mock(Product.class);
+        when(product.getId()).thenReturn(11L);
+        when(product.getSlug()).thenReturn(slug);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(product));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(11L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(11L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(5);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(40);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(product), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(product),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
+
+    // TC-PROD-DETAIL-15: Xem thông tin bổ sung của sản phẩm
+    @Test
+    @DisplayName("Should return product with supplementary information")
+    void getProduct_ShouldReturnProductWithSupplementaryInformation() {
+        // Arrange
+        String slug = "macbook-air-m2";
+
+        Product product = mock(Product.class);
+        when(product.getId()).thenReturn(12L);
+        when(product.getSlug()).thenReturn(slug);
+
+        when(productRepository.findBySlug(slug)).thenReturn(Optional.of(product));
+        when(projectionRepository.findSimpleProductInventories(eq(List.of(12L)))).thenReturn(productInventories);
+        when(projectionRepository.findSimpleProductInventories(argThat(list -> !list.equals(List.of(12L)))))
+                .thenReturn(Collections.emptyList());
+        when(reviewRepository.findAverageRatingScoreByProductId(anyLong())).thenReturn(5);
+        when(reviewRepository.countByProductId(anyLong())).thenReturn(50);
+
+        // For related products
+        Page<Product> relatedProducts = new PageImpl<>(Collections.emptyList());
+        when(productRepository.findByParams(anyString(), eq("random"), isNull(), eq(false), eq(false),
+                any(Pageable.class)))
+                .thenReturn(relatedProducts);
+
+        when(clientProductMapper.entityToResponse(eq(product), anyList(), anyInt(), anyInt(), anyList()))
+                .thenReturn(clientProductResponse);
+
+        // Act
+        ResponseEntity<ClientProductResponse> response = clientProductController.getProduct(slug);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        verify(productRepository).findBySlug(slug);
+        verify(clientProductMapper).entityToResponse(
+                eq(product),
+                anyList(),
+                anyInt(),
+                anyInt(),
+                anyList());
+    }
 }

@@ -71,7 +71,8 @@ public class AuthController {
                 .map(RefreshToken::getUser)
                 .map(User::getUsername)
                 .map(jwtUtils::generateTokenFromUsername)
-                .orElseThrow(() -> new RefreshTokenException("Refresh token was expired. Please make a new signin request!"));
+                .orElseThrow(() -> new RefreshTokenException(
+                        "Refresh token was expired. Please make a new signin request!"));
 
         return ResponseEntity.ok(new JwtResponse("Refresh token", jwt, refreshToken, Instant.now()));
     }

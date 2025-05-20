@@ -88,14 +88,12 @@ public class ClientProfileUpdateTest {
                 addressRequest.setProvinceId(60L); // ID tỉnh/thành phố
                 addressRequest.setDistrictId(665L); // ID quận/huyện
                 addressRequest.setWardId(10235L); // ID phường/xã
-
                 // Tạo đối tượng request với thông tin cá nhân mới
                 ClientPersonalSettingUserRequest request = new ClientPersonalSettingUserRequest();
                 request.setUsername(TEST_USERNAME);
                 request.setFullname("Nguyễn Văn A"); // Họ tên mới
                 request.setGender("M"); // Giới tính (Nam)
                 request.setAddress(addressRequest); // Địa chỉ mới
-
                 // Tạo đối tượng User mô phỏng kết quả sau khi cập nhật
                 User updatedUser = new User();
                 updatedUser.setId(1L);
@@ -105,7 +103,6 @@ public class ClientProfileUpdateTest {
                 updatedUser.setFullname("Nguyễn Văn A"); // Họ tên đã được cập nhật
                 updatedUser.setGender("M");
                 updatedUser.setAddress(testAddress);
-
                 // Tạo đối tượng UserResponse mô phỏng kết quả trả về cho client
                 UserResponse updatedResponse = new UserResponse();
                 updatedResponse.setId(1L);
@@ -114,23 +111,19 @@ public class ClientProfileUpdateTest {
                 updatedResponse.setPhone("1234567890");
                 updatedResponse.setFullname("Nguyễn Văn A");
                 updatedResponse.setGender("M");
-
                 // Cấu hình các mock để trả về kết quả mong muốn
                 when(userRepository.findByUsername(TEST_USERNAME)).thenReturn(Optional.of(testUser));
                 when(userMapper.partialUpdate(any(User.class), any(ClientPersonalSettingUserRequest.class)))
                                 .thenReturn(updatedUser);
                 when(userRepository.save(any(User.class))).thenReturn(updatedUser);
                 when(userMapper.entityToResponse(any(User.class))).thenReturn(updatedResponse);
-
                 // Act - Thực hiện phương thức cần test
                 ResponseEntity<UserResponse> response = clientUserController.updatePersonalSetting(authentication,
                                 request);
-
                 // Assert - Kiểm tra kết quả
                 assertEquals(HttpStatus.OK, response.getStatusCode()); // Kiểm tra status code
                 assertNotNull(response.getBody()); // Kiểm tra response body không null
                 assertEquals("Nguyễn Văn A", response.getBody().getFullname()); // Kiểm tra họ tên đã được cập nhật
-
                 // Xác minh các phương thức mock đã được gọi đúng
                 verify(userRepository).findByUsername(TEST_USERNAME);
                 verify(userMapper).partialUpdate(any(User.class), any(ClientPersonalSettingUserRequest.class));

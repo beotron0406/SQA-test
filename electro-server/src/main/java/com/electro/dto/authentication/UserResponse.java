@@ -20,4 +20,8 @@ public class UserResponse {
     private String avatar;
     private Integer status;
     private Set<RoleResponse> roles;
+    public void setAddress(String string) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setAddress'");
+    }
 }
